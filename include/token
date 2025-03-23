@@ -1,0 +1,37 @@
+#pragma once
+#include <ostream>
+#include <string>
+#include <any>
+
+enum TokenType {
+  LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, COMMA, NOT,
+  PLUS, SEMICOLON, SLASH, STAR, QUESTION, COLON, DOT, MINUS, PERCENTAGE,
+
+  AND_AND, OR_OR,
+  BANG, BANG_EQUAL,
+  EQUAL, EQUAL_EQUAL,
+  GREATER, GREATER_EQUAL,
+  LESS, LESS_EQUAL,
+  LEFT_SHIFT, RIGHT_SHIFT,
+
+  IDENTIFIER, STRING, NUMBER,
+
+  AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
+  PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE, XOR,
+  BREAK, CONTINUE,
+
+  OWO_EOF
+};
+
+class Token {
+public:
+  const TokenType type;
+  const std::string lexeme;
+  const std::any object;
+  const int line;
+
+  Token();
+  Token(TokenType type, std::string lexeme, std::any object, int line);
+
+  friend std::ostream& operator<<(std::ostream& out, const Token& obj);
+};
