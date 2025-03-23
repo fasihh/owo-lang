@@ -1,0 +1,16 @@
+#include <token>
+#include <memory>
+
+class owo {
+private:
+  static bool had_error;
+  static bool had_runtime_error;
+
+  static void run(const std::string& source, const int mode);
+public:
+  static void run_file(const std::string& path);
+  static void run_prompt();
+  static void error(int line, std::string message);
+  static void error(std::unique_ptr<Token> token, std::string message);
+  static void report(int line, std::string where, std::string message);
+};
