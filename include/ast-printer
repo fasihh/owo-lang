@@ -2,7 +2,15 @@
 
 class AstPrinter: ExprVisitor<std::string> {
 private:
-  std::string parenthesize(std::string name, const std::vector<std::unique_ptr<Expr>>& exprs);
+  std::string parenthesize(const std::string& name, const std::vector<Expr*>& exprs);
 public:
   std::string print(Expr& expr);
+
+  void visitBinaryExpr(Binary& expr) override;
+  void visitGroupingExpr(Grouping& expr) override;
+  void visitLiteralExpr(Literal& expr) override;
+  void visitUnaryExpr(Unary& expr) override;
+  void visitCallExpr(Call& expr) override;
+  void visitVariableExpr(Variable& expr) override;
+  void visitTernaryExpr(Ternary& expr) override;
 };
