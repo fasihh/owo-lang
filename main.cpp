@@ -15,9 +15,5 @@ int main(int argc, char *argv[]) {
     std::cout << error.what() << std::endl;
   }
 
-  Token t(TokenType::STRING, "example", std::string("Hello World!"), 0);
-
-  std::cout << t << std::endl;
-
   return 0;
 }
