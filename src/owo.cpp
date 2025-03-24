@@ -2,16 +2,20 @@
 #include <iostream>
 #include <fstream>
 #include <scanner>
+#include <parser>
+#include <ast-printer>
 
 void owo::run(const std::string& source, const int mode) {
   Scanner scanner = Scanner(source);
   const std::vector<std::unique_ptr<Token>>& tokens = scanner.scan_tokens();
+  Parser parser = Parser(tokens);
+  const std::vector<std::unique_ptr<Expr>>& exprs = parser.parse();
 
   if (owo::had_error) return;
 
-  for (const auto& token : tokens)
-    std::cout << *token << std::endl;
-  std::cout << mode << std::endl;
+  AstPrinter printer;
+  for (const auto& expr : exprs)
+    std::cout << printer.print(*expr) << std::endl;
 }
 
 void owo::run_file(const std::string& path) {
@@ -60,7 +64,7 @@ void owo::report(int line, std::string where, std::string message) {
   owo::had_error = true;
 }
 
-void owo::error(std::unique_ptr<Token> token, std::string message) {
+void owo::error(const Token* token, std::string message) {
   if (token->type == OWO_EOF)
     owo::report(token->line, "at end", message);
   else
