@@ -1,5 +1,6 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17
+# -Wall removed for now
+CFLAGS = -Wextra -std=c++17
 SRC_DIR = src
 INC_DIR = include
 BIN_DIR = bin
