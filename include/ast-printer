@@ -1,0 +1,8 @@
+#include <expr>
+
+class AstPrinter: ExprVisitor<std::string> {
+private:
+  std::string parenthesize(std::string name, const std::vector<std::unique_ptr<Expr>>& exprs);
+public:
+  std::string print(Expr& expr);
+};

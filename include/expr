@@ -1,0 +1,63 @@
+#pragma once
+#include <token>
+#include <vector>
+#include <memory>
+
+struct Binary;
+struct Grouping;
+struct Literal;
+struct Unary;
+
+struct ExprVisitorBase {
+	virtual void visitBinaryExpr(Binary& expr) = 0;
+	virtual void visitGroupingExpr(Grouping& expr) = 0;
+	virtual void visitLiteralExpr(Literal& expr) = 0;
+	virtual void visitUnaryExpr(Unary& expr) = 0;
+};
+
+template <typename T>
+struct ExprVisitor: ExprVisitorBase {
+	T result_expr;
+};
+
+struct Expr {
+	template <typename T>
+	T accept(ExprVisitor<T>& visitor) {
+		do_accept(visitor);
+		return visitor.result_expr;
+	}
+
+	virtual void do_accept(ExprVisitorBase& visitor) = 0;
+	virtual ~Expr() = default;
+};
+
+struct Binary: Expr {
+	std::unique_ptr<Expr> left;
+	const Token& op;
+	std::unique_ptr<Expr> right;
+	Binary(std::unique_ptr<Expr> left, const Token& op, std::unique_ptr<Expr> right): left(std::move(left)), op(op), right(std::move(right)) {};
+
+	void do_accept(ExprVisitorBase& visitor) override { visitor.visitBinaryExpr(*this); }
+};
+
+struct Grouping: Expr {
+	std::unique_ptr<Expr> expression;
+	Grouping(std::unique_ptr<Expr> expression): expression(std::move(expression)) {};
+
+	void do_accept(ExprVisitorBase& visitor) override { visitor.visitGroupingExpr(*this); }
+};
+
+struct Literal: Expr {
+	std::any value;
+	Literal(std::any value): value(value) {};
+
+	void do_accept(ExprVisitorBase& visitor) override { visitor.visitLiteralExpr(*this); }
+};
+
+struct Unary: Expr {
+	const Token& op;
+	std::unique_ptr<Expr> right;
+	Unary(const Token& op, std::unique_ptr<Expr> right): op(op), right(std::move(right)) {};
+
+	void do_accept(ExprVisitorBase& visitor) override { visitor.visitUnaryExpr(*this); }
+};
