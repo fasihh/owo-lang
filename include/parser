@@ -1,0 +1,81 @@
+#pragma once
+#include <token>
+#include <expr>
+#include <vector>
+#include <stdexcept>
+
+/*
+  <-------------------------- RULES -------------------------->
+  program -> declaration* EOF;
+  declaration -> var_decl | function_decl | statement ;
+  var_decl -> "var" var_list ";";
+  function_decl -> "fun" function;
+  function -> IDENTIFIER "(" param_list ")" block ;
+  param_list -> IDENTIFIER ( "," IDENTIFIER )*;
+  var_list -> IDENTIFIER ( "=" expression )? ( "," IDENTIFIER ( "=" expression )? )*;
+  statement -> expr_statment | if_statement | while_statement | for_statement | print_statement | block | ( "break" ";" ) | ( "continue"  ";" );
+  if_statement -> "if" "(" expression ")" statement ( "else" statement )?;
+  while_statement -> "while" "(" expression ")" statement;
+  for_statement -> "for" "(" ( var_decl | expr_statement | ";" )? expression? ";" comma ")" statement;
+  print_statement -> "print" comma ";"
+  return_statement -> "return" expression? ";";
+  block -> "{" declaration "}";
+  expr_statment -> comma ";";
+  comma -> expression ( "," expression )*;
+  expression -> assignment;
+  assignment -> ( IDENTIFIER "=" assignment ) | ternary;
+  ternary -> equality ( "?" expression ":" expression )?;
+  equality -> bitwise ( ( "!=" | "==" ) bitwise )*;
+  bitwise -> logical ( ( "&" | "|" | "^" | "<<" | ">>" ) logical )*;
+  logical -> comparison ( ( "&&" | "||" ) comparison )*;
+  comparison -> term ( ( "<" | ">" | "<=" | ">=" ) term )*;
+  term -> factor ( ( "+" | "-" ) factor )*;
+  factor -> unary ( ( "*" | "/" | "%" ) unary )*;
+  unary -> ( "!" | "-" ) unary | primary;
+  call -> primary ( "(" comma? ")" )*;
+  primary -> NUMBER | IDENTIFIER | STRING | "(" expression ")" | IDENTIFIER;
+  <----------------------------------------------------------->
+*/
+
+class ParseError: public std::runtime_error {
+public:
+  ParseError(const std::string& message): std::runtime_error(message) {}
+};
+
+class Parser {
+private:
+  const std::vector<std::unique_ptr<Token>>& tokens;
+  std::vector<std::unique_ptr<Expr>> expressions;
+  int current = 0;
+  
+  bool match(std::vector<TokenType> types);
+  bool check(TokenType type);
+  bool at_end();
+  const Token* advance();
+  const Token* previous();
+  const Token* peek();
+  const Token* consume(TokenType type, const std::string& message);
+  ParseError error(const Token* token, const std::string& message);
+  void synchronize();
+  // Expr* finish_call(Expr* callee);
+
+  std::vector<std::unique_ptr<Expr>> comma();
+  std::unique_ptr<Expr> expression();
+  // std::unique_ptr<Expr> assignment();
+  std::unique_ptr<Expr> ternary();
+  std::unique_ptr<Expr> equality();
+  std::unique_ptr<Expr> bitwise();
+  std::unique_ptr<Expr> logical();
+  std::unique_ptr<Expr> comparison();
+  std::unique_ptr<Expr> term();
+  std::unique_ptr<Expr> factor();
+  std::unique_ptr<Expr> unary();
+
+  // std::unique_ptr<Expr> call();
+  std::unique_ptr<Expr> primary();
+public:
+  Parser(const std::vector<std::unique_ptr<Token>>& tokens);
+  ~Parser() = default;
+
+  const std::vector<std::unique_ptr<Expr>>& parse();
+};
