@@ -8,21 +8,13 @@ HEADERS = """#pragma once
 
 """
 
-# exprs = {
-#   "Binary": [("std::unique_ptr<Expr>", "left"), ("std::unique_ptr<Token>", "op"), ("std::unique_ptr<Expr>", "right")],
-#   "Grouping": [("std::unique_ptr<Expr>", "expression")],
-#   "Literal": [("std::any", "value")],
-#   "Unary": [("std::unique_ptr<Token>", "op"), ("std::unique_ptr<Expr>", "right")],
-#   "Call": [("std::unique_ptr<Expr>", "callee"), ("std::unique_ptr<Token>", "paren"), ("std::vector<std::unique_ptr<Expr>>", "args")],
-#   "Variable": [("std::unique_ptr<Token>", "label")],
-#   "Ternary": [("std::unique_ptr<Expr>", "condition"), ("std::unique_ptr<Expr>", "true_case"), ("std::unique_ptr<Expr>", "false_case")]
-# }
 exprs = {
   "Binary": [("std::unique_ptr<Expr>", "left"), ("Token*", "op"), ("std::unique_ptr<Expr>", "right")],
+  "Assign": [("Token*", "name"), ("std::unique_ptr<Expr>", "value")],
   "Grouping": [("std::unique_ptr<Expr>", "expression")],
   "Literal": [("std::any", "value")],
   "Unary": [("Token*", "op"), ("std::unique_ptr<Expr>", "right")],
-  "Call": [("std::unique_ptr<Expr>", "callee"), ("Token*", "paren"), ("std::vector<std::unique_ptr<Expr>>", "args")],
+  # "Call": [("std::unique_ptr<Expr>", "callee"), ("Token*", "paren"), ("std::vector<std::unique_ptr<Expr>>", "args")],
   "Variable": [("Token*", "label")],
   "Ternary": [("std::unique_ptr<Expr>", "condition"), ("std::unique_ptr<Expr>", "true_case"), ("std::unique_ptr<Expr>", "false_case")]
 }

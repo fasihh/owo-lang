@@ -7,10 +7,11 @@ public:
   std::string print(Expr& expr);
 
   void visitBinaryExpr(Binary& expr) override;
+  void visitAssignExpr(Assign& expr) override;
   void visitGroupingExpr(Grouping& expr) override;
   void visitLiteralExpr(Literal& expr) override;
   void visitUnaryExpr(Unary& expr) override;
-  void visitCallExpr(Call& expr) override;
+  // void visitCallExpr(Call& expr) override;
   void visitVariableExpr(Variable& expr) override;
   void visitTernaryExpr(Ternary& expr) override;
 };

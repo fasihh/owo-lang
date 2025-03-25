@@ -21,6 +21,11 @@ void AstPrinter::visitBinaryExpr(Binary& expr) {
   result_expr = parenthesize(expr.op->lexeme, exprs);
 }
 
+void AstPrinter::visitAssignExpr(Assign& expr) {
+  const std::vector<Expr*> exprs{expr.value.get()};
+  result_expr = parenthesize("=" + expr.name->lexeme, exprs);
+}
+
 void AstPrinter::visitGroupingExpr(Grouping& expr) {
   const std::vector<Expr*> exprs{expr.expression.get()};
   result_expr = parenthesize("group", exprs);
@@ -60,12 +65,12 @@ void AstPrinter::visitUnaryExpr(Unary& expr) {
   result_expr = parenthesize(expr.op->lexeme, exprs);
 }
 
-void AstPrinter::visitCallExpr(Call& expr) {
-  std::vector<Expr*> exprs{expr.callee.get()};
-  for (auto& arg : expr.args)
-    exprs.push_back(arg.get());
-  result_expr = parenthesize("call", exprs);
-}
+// void AstPrinter::visitCallExpr(Call& expr) {
+//   std::vector<Expr*> exprs{expr.callee.get()};
+//   for (auto& arg : expr.args)
+//     exprs.push_back(arg.get());
+//   result_expr = parenthesize("call", exprs);
+// }
 
 void AstPrinter::visitVariableExpr(Variable& expr) {
   result_expr = parenthesize(expr.label->lexeme, {});
