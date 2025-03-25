@@ -1,16 +1,19 @@
 #include <token>
 #include <memory>
+#include <interpreter>
+#include <exceptions>
 
 class owo {
 private:
   static bool had_error;
   static bool had_runtime_error;
 
-  static void run(const std::string& source, const int mode);
+  static void run(const std::string& source, Interpreter& interpreter, const int mode);
 public:
   static void run_file(const std::string& path);
   static void run_prompt();
   static void error(int line, std::string message);
   static void error(const Token* token, std::string message);
   static void report(int line, std::string where, std::string message);
+  static void runtime_error(const RuntimeError& error);
 };
