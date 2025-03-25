@@ -71,7 +71,7 @@ bool Interpreter::is_equal(const std::any& left, const std::any& right) {
   if (is_bool(left) && is_bool(right))
     return get_bool(left) == get_bool(right);
 
-  return !left.has_value() && !right.has_value();
+  return !is_truthy(left) && !is_truthy(right);
 }
 
 bool Interpreter::is_truthy(const std::any& obj) {
