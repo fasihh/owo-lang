@@ -18,10 +18,13 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -I$(INC_DIR) -c $< -o $@
 
-.PHONY: run clean
+.PHONY: run runf clean
 
 run: $(BIN_DIR)/$(TARGET)
 	./bin/main
+
+runf: $(BIN_DIR)/$(TARGET)
+	./bin/main owo.kt
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
