@@ -35,3 +35,5 @@ public:
 
   friend std::ostream& operator<<(std::ostream& out, const Token& obj);
 };
+
+std::ostream& operator<<(std::ostream& out, const std::any& obj);

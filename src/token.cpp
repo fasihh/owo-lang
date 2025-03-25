@@ -1,4 +1,5 @@
 #include <token>
+#include <callable-function>
 
 std::string token_type_to_string(TokenType type) {
   switch (type) {
@@ -76,14 +77,20 @@ std::ostream& operator<<(std::ostream& out, const std::any& obj) {
         out << std::any_cast<double>(obj);
       } else if (obj.type() == typeid(int)) {
         out << std::any_cast<int>(obj);
+      } else if (obj.type() == typeid(bool)) {
+        out << (std::any_cast<bool>(obj) ? "true" : "false");
+      } else if (obj.type() == typeid(Callable)) {
+        out << std::any_cast<Callable>(obj).to_string();
+      } else if (obj.type() == typeid(CallableFunction)) {
+        out << std::any_cast<CallableFunction>(obj).to_string();
       } else {
-        out << "<unsupported type>";
+        out << "nil";
       }
     } catch (const std::bad_any_cast& e) {
       out << "<bad_any_cast>";
     }
   } else {
-    out << "null";
+    out << "<none>";
   }
 
   return out;
