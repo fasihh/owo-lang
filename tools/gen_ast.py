@@ -18,7 +18,7 @@ exprs = {
   "Grouping": [("std::unique_ptr<Expr>", "expression")],
   "Literal": [("std::any", "value")],
   "Unary": [("Token*", "op"), ("std::unique_ptr<Expr>", "right")],
-  # "Call": [("std::unique_ptr<Expr>", "callee"), ("Token*", "paren"), ("std::vector<std::unique_ptr<Expr>>", "args")],
+  "Call": [("std::unique_ptr<Expr>", "callee"), ("Token*", "paren"), ("std::vector<std::unique_ptr<Expr>>", "args")],
   "Variable": [("Token*", "label")],
   "Ternary": [("std::unique_ptr<Expr>", "condition"), ("std::unique_ptr<Expr>", "true_case"), ("std::unique_ptr<Expr>", "false_case")]
 }
@@ -28,7 +28,7 @@ stmts = {
   "Var": [("std::vector<std::pair<const Token*, std::unique_ptr<Expr>>>", "variables")],
   "Function": [("Token*", "name"), ("std::vector<const Token*>", "params"), ("std::vector<std::unique_ptr<Stmt>>", "body")],
   "Block": [("std::vector<std::unique_ptr<Stmt>>", "statements")],
-  "If": [("Token*", "condition"), ("std::unique_ptr<Stmt>", "if_case"), ("std::unique_ptr<Stmt>", "else_case")]
+  "If": [("std::unique_ptr<Expr>", "condition"), ("std::unique_ptr<Stmt>", "if_case"), ("std::unique_ptr<Stmt>", "else_case")]
 }
 
 move_f: Callable[[str], str] = lambda s: f"std::move({s})"
