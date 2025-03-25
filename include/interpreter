@@ -1,22 +1,25 @@
-#include <expr>
+#pragma once
+#include <stmt>
+#include <environment>
 
-class RuntimeError: public std::runtime_error {
-public:
-  const Token* token;
-  RuntimeError(const std::string& message, const Token* token): std::runtime_error(message), token(token) {}
-};
-
-class Interpreter : ExprVisitor<std::any> {
+class Interpreter : ExprVisitor<std::any>, StmtVisitor<nullptr_t> {
 private:
   int mode;
-  std::any evaluate(Expr* expr);
-
+  
+  std::any evaluate(Expr& expr);
+  nullptr_t execute(Stmt& stmt);
+  
   bool is_equal(const std::any& left, const std::any& right);
   bool is_truthy(const std::any& obj);
   void check_number_operand(const Token* token, const std::any& obj);
   void check_number_operands(const Token* token, const std::any& left, const std::any& right);
 public:
-  void interpret(const std::vector<std::unique_ptr<Expr>>& exprs);
+  std::unique_ptr<Environment> env;
+  void execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, std::unique_ptr<Environment>& env);
+
+  Interpreter();
+
+  void interpret(const std::vector<std::unique_ptr<Stmt>>& stmts);
   void set_mode(const int mode);
 
   void visitBinaryExpr(Binary& expr) override;
@@ -24,7 +27,14 @@ public:
   void visitGroupingExpr(Grouping& expr) override;
   void visitLiteralExpr(Literal& expr) override;
   void visitUnaryExpr(Unary& expr) override;
-  // void visitCallExpr(Call& expr) override;
+  void visitCallExpr(Call& expr) override;
   void visitVariableExpr(Variable& expr) override;
   void visitTernaryExpr(Ternary& expr) override;
+
+  void visitExpressionStmt(Expression& stmt) override;
+  void visitVarStmt(Var& stmt) override;
+  void visitBlockStmt(Block& stmt) override;
+  void visitIfStmt(If& stmt) override;
+  void visitFunctionStmt(Function& stmt) override;
+  void visitReturnStmt(Return& stmt) override;
 };

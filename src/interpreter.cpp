@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <callable-function>
+#include <owo>
 
 bool is_string(const std::any& obj) {
   return obj.type() == typeid(std::string);
@@ -38,24 +40,21 @@ std::string double_to_string(const double value) {
   return str_value;
 }
 
-std::any Interpreter::evaluate(Expr *expr) { // could be problem
-  if (!expr) // this shouldn't really happen
-    return std::any(nullptr);
-  expr->accept(*this);
-  return result_expr;
+std::any Interpreter::evaluate(Expr& expr) {
+  return expr.accept(*this);
 }
 
-void Interpreter::interpret(const std::vector<std::unique_ptr<Expr>> &exprs) {
-  for (const auto& expr : exprs) {
-    std::any value = evaluate(expr.get());
-    if (is_string(value))
-      std::cout << get_string(value) << std::endl;
-    else if (is_double(value))
-      std::cout << get_double(value) << std::endl;
-    else if (is_bool(value))
-      std::cout << (get_bool(value) ? "true" : "false") << std::endl;
-    else
-      std::cout << "nil" << std::endl; // using nil here
+nullptr_t Interpreter::execute(Stmt& stmt) {
+  stmt.accept(*this);
+  return nullptr;
+}
+
+void Interpreter::interpret(const std::vector<std::unique_ptr<Stmt>> &stmts) {
+  try {
+    for (const auto& stmt : stmts)
+      execute(*stmt);
+  } catch (const RuntimeError& error) {
+    owo::runtime_error(error);
   }
 }
 
@@ -91,9 +90,33 @@ void Interpreter::check_number_operands(const Token* token, const std::any& left
   throw RuntimeError("Operands must be of type number", token);
 }
 
+void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, std::unique_ptr<Environment>& env) {
+  std::unique_ptr<Environment> previous = std::move(this->env);
+  this->env = std::move(env);
+  for (const auto& stmt : stmts)
+    execute(*stmt);
+  this->env = std::move(previous);
+}
+
+Interpreter::Interpreter() : env(std::make_unique<Environment>()) {
+  // make environment not take token itself
+  // handle runtime error taking token elsewhere
+  // maybe outside instead
+
+  env->define(
+    "print",
+    Callable("<native_fn>", 1, [=](Interpreter& interpreter, const std::vector<std::any>& arguments) {
+      for (const auto& arg : arguments)
+        std::cout << arg << std::endl;
+      return std::any(nullptr);
+    }),
+    nullptr
+  );
+}
+
 void Interpreter::visitBinaryExpr(Binary &expr) {
-  std::any left = evaluate(expr.left.get());
-  std::any right = evaluate(expr.right.get());
+  std::any left = evaluate(*expr.left);
+  std::any right = evaluate(*expr.right);
 
   switch (expr.op->type) {
   case TokenType::PLUS:
@@ -127,19 +150,19 @@ void Interpreter::visitBinaryExpr(Binary &expr) {
     return;
   case TokenType::GREATER:
     check_number_operands(expr.op, left, right);
-    result_expr = get_bool(left) > get_bool(right);
+    result_expr = get_double(left) > get_double(right);
     return;
   case TokenType::GREATER_EQUAL:
     check_number_operands(expr.op, left, right);
-    result_expr = get_bool(left) >= get_bool(right);
+    result_expr = get_double(left) >= get_double(right);
     return;
   case TokenType::LESS:
     check_number_operands(expr.op, left, right);
-    result_expr = get_bool(left) < get_bool(right);
+    result_expr = get_double(left) < get_double(right);
     return;
   case TokenType::LESS_EQUAL:
     check_number_operands(expr.op, left, right);
-    result_expr = get_bool(left) <= get_bool(right);
+    result_expr = get_double(left) <= get_double(right);
     return;
   case TokenType::EQUAL_EQUAL:
     result_expr = is_equal(left, right);
@@ -179,11 +202,11 @@ void Interpreter::visitBinaryExpr(Binary &expr) {
 }
 
 void Interpreter::visitAssignExpr(Assign& expr) {
-  result_expr = nullptr;
+  result_expr = env->assign(expr.name->lexeme, evaluate(*expr.value), expr.name);
 }
 
 void Interpreter::visitGroupingExpr(Grouping &expr) {
-  result_expr = evaluate(expr.expression.get());
+  result_expr = evaluate(*expr.expression);
 }
 
 void Interpreter::visitLiteralExpr(Literal &expr) {
@@ -191,7 +214,7 @@ void Interpreter::visitLiteralExpr(Literal &expr) {
 }
 
 void Interpreter::visitUnaryExpr(Unary &expr) {
-  std::any right = evaluate(expr.right.get());
+  std::any right = evaluate(*expr.right);
 
   switch (expr.op->type) {
   case TokenType::MINUS:
@@ -210,11 +233,69 @@ void Interpreter::visitUnaryExpr(Unary &expr) {
   result_expr = nullptr;
 }
 
+void Interpreter::visitCallExpr(Call &expr) {
+  std::any callee = evaluate(*expr.callee);
+
+  std::vector<std::any> arguments;
+  for (const auto& arg : expr.args)
+    arguments.push_back(evaluate(*arg));
+
+  if (callee.type() == typeid(Callable)) {
+    Callable func = std::any_cast<Callable>(callee);
+    if (arguments.size() != func.arity())
+      throw RuntimeError("Expected " + std::to_string(func.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".", expr.paren);
+    result_expr = func.call(*this, arguments);
+
+  } else if (callee.type() == typeid(CallableFunction)) {
+    CallableFunction func = std::any_cast<CallableFunction>(callee);
+    if (arguments.size() != func.arity())
+      throw RuntimeError("Expected " + std::to_string(func.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".", expr.paren);
+    result_expr = func.call(*this, arguments);
+
+  } else {
+    throw RuntimeError("Can only call functions and classes.", expr.paren);
+  }
+}
+
 void Interpreter::visitVariableExpr(Variable &expr) {
-  result_expr = nullptr; 
+  result_expr = env->get(expr.label->lexeme, expr.label);
 }
 
 void Interpreter::visitTernaryExpr(Ternary &expr) {
-  std::any condition = evaluate(expr.condition.get());
-  result_expr = evaluate(is_truthy(condition) ? expr.true_case.get() : expr.false_case.get());
+  std::any condition = evaluate(*expr.condition);
+  result_expr = evaluate(is_truthy(condition) ? *expr.true_case : *expr.false_case);
+}
+
+void Interpreter::visitExpressionStmt(Expression &stmt) {
+  for (const auto& expr : stmt.expressions) {
+    std::any value = evaluate(*expr);
+    if (mode == 1)
+      std::cout << value << std::endl;
+  }
+}
+
+void Interpreter::visitVarStmt(Var &stmt) {
+  for (const auto& [label, value] : stmt.variables)
+    env->define(label->lexeme, value ? evaluate(*value) : nullptr, label);
+}
+
+void Interpreter::visitBlockStmt(Block &stmt) {
+  std::unique_ptr<Environment> new_env(std::make_unique<Environment>(this->env.get()));
+  execute_block(stmt.statements, new_env);
+}
+
+void Interpreter::visitIfStmt(If &stmt) {
+  if (is_truthy(evaluate(*stmt.condition)))
+    execute(*stmt.if_case);
+  else if (stmt.else_case)
+    execute(*stmt.else_case);
+}
+
+void Interpreter::visitFunctionStmt(Function &stmt) {
+  CallableFunction function = CallableFunction(stmt);
+  env->define(stmt.name->lexeme, function, stmt.name);
+}
+
+void Interpreter::visitReturnStmt(Return &stmt) {
+  throw ReturnException(evaluate(*stmt.value));
 }

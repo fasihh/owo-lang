@@ -1,0 +1,14 @@
+#include <stdexcept>
+#include <token>
+
+class RuntimeError: public std::runtime_error {
+public:
+  const Token* token;
+  RuntimeError(const std::string& message, const Token* token);
+};
+
+class ReturnException : public std::exception {
+public:
+  std::any value;
+  ReturnException(const std::any& value);
+};

@@ -1,0 +1,21 @@
+#pragma once
+#include <map>
+#include <token>
+#include <memory>
+
+typedef std::map<std::string, std::any> ValuesMap;
+
+class Environment {
+private:
+  ValuesMap values;
+  Environment* enclosing;
+public:
+  Environment(Environment* enclosing = nullptr);
+  ~Environment() = default;
+
+  void define(const std::string& name, const std::any& value, const Token* token);
+  std::any get(const std::string& name, const Token* token);
+  std::any assign(const std::string& name, const std::any& value, const Token* token);
+
+  void show_all();
+};

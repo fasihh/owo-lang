@@ -1,8 +1,9 @@
-var x = 2;
-
-fun test(y) {
-  x = y;
+fun fib(n) {
+  var x = 2;
+  return n * x; 
 }
 
-test(3);
-print(x);
+print(fib);
+var result = fib(10);
+
+print(result);

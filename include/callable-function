@@ -1,0 +1,10 @@
+#pragma once
+#include <callable>
+
+class CallableFunction : public Callable {
+  const Function& declaration;
+public:
+  CallableFunction(const Function& declaration);
+
+  std::any call(Interpreter& interpreter, const std::vector<std::any>& args) override;
+};

@@ -3,6 +3,7 @@
 struct Expression;
 struct Var;
 struct Function;
+struct Return;
 struct Block;
 struct If;
 
@@ -10,6 +11,7 @@ struct StmtVisitorBase {
 	virtual void visitExpressionStmt(Expression& expr) = 0;
 	virtual void visitVarStmt(Var& expr) = 0;
 	virtual void visitFunctionStmt(Function& expr) = 0;
+	virtual void visitReturnStmt(Return& expr) = 0;
 	virtual void visitBlockStmt(Block& expr) = 0;
 	virtual void visitIfStmt(If& expr) = 0;
 };
@@ -57,6 +59,16 @@ struct Function : Stmt {
 		: name(name), params(std::move(params)), body(std::move(body)) {};
 
 	void do_accept(StmtVisitorBase& visitor) { visitor.visitFunctionStmt(*this); }
+};
+
+struct Return : Stmt {
+	const Token* keyword;
+	const std::unique_ptr<Expr> value;
+
+	Return(const Token* keyword, std::unique_ptr<Expr> value)
+		: keyword(keyword), value(std::move(value)) {};
+
+	void do_accept(StmtVisitorBase& visitor) { visitor.visitReturnStmt(*this); }
 };
 
 struct Block : Stmt {

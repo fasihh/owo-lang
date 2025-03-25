@@ -291,6 +291,7 @@ std::unique_ptr<Stmt> Parser::func(const std::string &kind) {
 
 std::unique_ptr<Stmt> Parser::statement() {
   if (match({ LEFT_BRACE })) return std::make_unique<Block>(std::move(block()));
+  if (match({ RETURN })) return return_stmt();
   return expr_stmt();
 }
 
@@ -307,6 +308,17 @@ std::unique_ptr<Stmt> Parser::if_stmt() {
   return std::make_unique<If>(std::move(expr), std::move(then_branch), std::move(else_branch));
 }
 
+std::unique_ptr<Stmt> Parser::return_stmt() {
+  const Token* keyword = previous();
+  std::unique_ptr<Expr> value = nullptr;
+
+  if (!check(SEMICOLON))
+      value = expression();
+
+  consume(SEMICOLON, "Expect ';' after 'return' value.");
+  return std::make_unique<Return>(keyword, std::move(value));
+}
+
 std::vector<std::unique_ptr<Stmt>> Parser::block() {
   std::vector<std::unique_ptr<Stmt>> statements;
 
@@ -314,7 +326,7 @@ std::vector<std::unique_ptr<Stmt>> Parser::block() {
     statements.push_back(std::move(declaration()));
 
   consume(RIGHT_BRACE, "Expect '}' after block.");
-  return std::move(statements);
+  return statements;
 }
 
 const std::vector<std::unique_ptr<Stmt>> &Parser::parse() {

@@ -27,6 +27,7 @@ stmts = {
   "Expression": [("std::vector<std::unique_ptr<Expr>>", "expressions")],
   "Var": [("std::vector<std::pair<const Token*, std::unique_ptr<Expr>>>", "variables")],
   "Function": [("Token*", "name"), ("std::vector<const Token*>", "params"), ("std::vector<std::unique_ptr<Stmt>>", "body")],
+  "Return": [("Token*", "keyword"), ("std::unique_ptr<Expr>", "value")],
   "Block": [("std::vector<std::unique_ptr<Stmt>>", "statements")],
   "If": [("std::unique_ptr<Expr>", "condition"), ("std::unique_ptr<Stmt>", "if_case"), ("std::unique_ptr<Stmt>", "else_case")]
 }
