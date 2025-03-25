@@ -51,7 +51,9 @@ void owo::run_prompt() {
     if (input_buffer == "exit")
       break;
 
-    owo::run(input_buffer, 1);
+    try {
+      owo::run(input_buffer, 1);
+    } catch (const std::runtime_error& ) {}
     owo::had_error = false;
   }
 }
