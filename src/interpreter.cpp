@@ -90,15 +90,15 @@ void Interpreter::check_number_operands(const Token* token, const std::any& left
   throw RuntimeError("Operands must be of type number", token);
 }
 
-void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, std::unique_ptr<Environment>& env) {
-  std::unique_ptr<Environment> previous = std::move(this->env);
-  this->env = std::move(env);
+void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, Environment* env) {
+  Environment* previous = this->env;
+  this->env = env;
   for (const auto& stmt : stmts)
     execute(*stmt);
-  this->env = std::move(previous);
+  this->env = previous;
 }
 
-Interpreter::Interpreter() : env(std::make_unique<Environment>()) {
+Interpreter::Interpreter() : env(new Environment) {
   // make environment not take token itself
   // handle runtime error taking token elsewhere
   // maybe outside instead
@@ -112,6 +112,10 @@ Interpreter::Interpreter() : env(std::make_unique<Environment>()) {
     }),
     nullptr
   );
+}
+
+Interpreter::~Interpreter() {
+  delete env;
 }
 
 void Interpreter::visitBinaryExpr(Binary &expr) {
@@ -250,7 +254,8 @@ void Interpreter::visitCallExpr(Call &expr) {
     CallableFunction func = std::any_cast<CallableFunction>(callee);
     if (arguments.size() != func.arity())
       throw RuntimeError("Expected " + std::to_string(func.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".", expr.paren);
-    result_expr = func.call(*this, arguments);
+      result_expr = func.call(*this, arguments);
+      // std::cout << std::endl;//temp
 
   } else {
     throw RuntimeError("Can only call functions and classes.", expr.paren);
@@ -280,8 +285,9 @@ void Interpreter::visitVarStmt(Var &stmt) {
 }
 
 void Interpreter::visitBlockStmt(Block &stmt) {
-  std::unique_ptr<Environment> new_env(std::make_unique<Environment>(this->env.get()));
+  Environment* new_env = new Environment(this->env);
   execute_block(stmt.statements, new_env);
+  delete new_env;
 }
 
 void Interpreter::visitIfStmt(If &stmt) {

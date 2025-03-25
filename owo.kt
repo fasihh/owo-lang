@@ -1,9 +1,9 @@
 fun fib(n) {
-  var x = 2;
-  return n * x; 
+  if (n <= 1)
+    return n;
+  return fib(n - 2) + fib(n - 1);
 }
 
-print(fib);
-var result = fib(10);
+var result = fib(2);
 
 print(result);

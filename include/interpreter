@@ -14,10 +14,11 @@ private:
   void check_number_operand(const Token* token, const std::any& obj);
   void check_number_operands(const Token* token, const std::any& left, const std::any& right);
 public:
-  std::unique_ptr<Environment> env;
-  void execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, std::unique_ptr<Environment>& env);
+  Environment* env;
+  void execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, Environment* env);
 
   Interpreter();
+  ~Interpreter();
 
   void interpret(const std::vector<std::unique_ptr<Stmt>>& stmts);
   void set_mode(const int mode);
