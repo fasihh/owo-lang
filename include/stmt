@@ -1,0 +1,81 @@
+#pragma once
+#include <expr>
+struct Expression;
+struct Var;
+struct Function;
+struct Block;
+struct If;
+
+struct StmtVisitorBase {
+	virtual void visitExpressionStmt(Expression& expr) = 0;
+	virtual void visitVarStmt(Var& expr) = 0;
+	virtual void visitFunctionStmt(Function& expr) = 0;
+	virtual void visitBlockStmt(Block& expr) = 0;
+	virtual void visitIfStmt(If& expr) = 0;
+};
+
+template <typename T>
+struct StmtVisitor : StmtVisitorBase {
+	T result_stmt;
+};
+
+struct Stmt {
+	template <typename T>
+	T accept(StmtVisitor<T>& visitor) {
+		do_accept(visitor);
+		return visitor.result_stmt;
+	}
+
+	virtual void do_accept(StmtVisitorBase& visitor) = 0;
+	virtual ~Stmt() = default;
+};
+
+struct Expression : Stmt {
+	const std::vector<std::unique_ptr<Expr>> expressions;
+
+	Expression(std::vector<std::unique_ptr<Expr>> expressions)
+		: expressions(std::move(expressions)) {};
+
+	void do_accept(StmtVisitorBase& visitor) { visitor.visitExpressionStmt(*this); }
+};
+
+struct Var : Stmt {
+	const std::vector<std::pair<const Token*, std::unique_ptr<Expr>>> variables;
+
+	Var(std::vector<std::pair<const Token*, std::unique_ptr<Expr>>> variables)
+		: variables(std::move(variables)) {};
+
+	void do_accept(StmtVisitorBase& visitor) { visitor.visitVarStmt(*this); }
+};
+
+struct Function : Stmt {
+	const Token* name;
+	const std::vector<const Token*> params;
+	const std::vector<std::unique_ptr<Stmt>> body;
+
+	Function(const Token* name, std::vector<const Token*> params, std::vector<std::unique_ptr<Stmt>> body)
+		: name(name), params(std::move(params)), body(std::move(body)) {};
+
+	void do_accept(StmtVisitorBase& visitor) { visitor.visitFunctionStmt(*this); }
+};
+
+struct Block : Stmt {
+	const std::vector<std::unique_ptr<Stmt>> statements;
+
+	Block(std::vector<std::unique_ptr<Stmt>> statements)
+		: statements(std::move(statements)) {};
+
+	void do_accept(StmtVisitorBase& visitor) { visitor.visitBlockStmt(*this); }
+};
+
+struct If : Stmt {
+	const Token* condition;
+	const std::unique_ptr<Stmt> if_case;
+	const std::unique_ptr<Stmt> else_case;
+
+	If(const Token* condition, std::unique_ptr<Stmt> if_case, std::unique_ptr<Stmt> else_case)
+		: condition(condition), if_case(std::move(if_case)), else_case(std::move(else_case)) {};
+
+	void do_accept(StmtVisitorBase& visitor) { visitor.visitIfStmt(*this); }
+};
+
