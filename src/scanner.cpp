@@ -17,7 +17,7 @@ std::map<std::string, TokenType> keywords{
   { "true", TRUE },
   { "class", CLASS },
   { "false", FALSE },
-  { "print", PRINT },
+//   { "print", PRINT },
   { "super", SUPER },
   { "while", WHILE },
   { "return", RETURN },
