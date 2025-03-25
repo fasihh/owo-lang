@@ -69,12 +69,12 @@ struct Block : Stmt {
 };
 
 struct If : Stmt {
-	const Token* condition;
+	const std::unique_ptr<Expr> condition;
 	const std::unique_ptr<Stmt> if_case;
 	const std::unique_ptr<Stmt> else_case;
 
-	If(const Token* condition, std::unique_ptr<Stmt> if_case, std::unique_ptr<Stmt> else_case)
-		: condition(condition), if_case(std::move(if_case)), else_case(std::move(else_case)) {};
+	If(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> if_case, std::unique_ptr<Stmt> else_case)
+		: condition(std::move(condition)), if_case(std::move(if_case)), else_case(std::move(else_case)) {};
 
 	void do_accept(StmtVisitorBase& visitor) { visitor.visitIfStmt(*this); }
 };
