@@ -3,6 +3,7 @@
 #include <fstream>
 #include <scanner>
 #include <parser>
+#include <interpreter>
 #include <ast-printer>
 
 void owo::run(const std::string& source, const int mode) {
@@ -13,9 +14,9 @@ void owo::run(const std::string& source, const int mode) {
 
   if (owo::had_error) return;
 
-  AstPrinter printer;
-  for (const auto& expr : exprs)
-    std::cout << printer.print(*expr) << std::endl;
+  Interpreter interpreter;
+  interpreter.set_mode(mode);
+  interpreter.interpret(exprs);
 }
 
 void owo::run_file(const std::string& path) {
