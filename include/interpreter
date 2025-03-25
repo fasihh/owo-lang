@@ -1,0 +1,30 @@
+#include <expr>
+
+class RuntimeError: public std::runtime_error {
+public:
+  const Token* token;
+  RuntimeError(const std::string& message, const Token* token): std::runtime_error(message), token(token) {}
+};
+
+class Interpreter : ExprVisitor<std::any> {
+private:
+  int mode;
+  std::any evaluate(Expr* expr);
+
+  bool is_equal(const std::any& left, const std::any& right);
+  bool is_truthy(const std::any& obj);
+  void check_number_operand(const Token* token, const std::any& obj);
+  void check_number_operands(const Token* token, const std::any& left, const std::any& right);
+public:
+  void interpret(const std::vector<std::unique_ptr<Expr>>& exprs);
+  void set_mode(const int mode);
+
+  void visitBinaryExpr(Binary& expr) override;
+  void visitAssignExpr(Assign& expr) override;
+  void visitGroupingExpr(Grouping& expr) override;
+  void visitLiteralExpr(Literal& expr) override;
+  void visitUnaryExpr(Unary& expr) override;
+  // void visitCallExpr(Call& expr) override;
+  void visitVariableExpr(Variable& expr) override;
+  void visitTernaryExpr(Ternary& expr) override;
+};
