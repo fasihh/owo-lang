@@ -1,17 +1,25 @@
-#include <expr>
+#include <stmt>
 
-class AstPrinter: ExprVisitor<std::string> {
+class AstPrinter: ExprVisitor<std::string>, StmtVisitor<std::string> {
 private:
   std::string parenthesize(const std::string& name, const std::vector<Expr*>& exprs);
 public:
   std::string print(Expr& expr);
+  std::string print(Stmt& stmt);
 
   void visitBinaryExpr(Binary& expr) override;
   void visitAssignExpr(Assign& expr) override;
   void visitGroupingExpr(Grouping& expr) override;
   void visitLiteralExpr(Literal& expr) override;
   void visitUnaryExpr(Unary& expr) override;
-  // void visitCallExpr(Call& expr) override;
+  void visitCallExpr(Call& expr) override;
   void visitVariableExpr(Variable& expr) override;
   void visitTernaryExpr(Ternary& expr) override;
+
+  void visitExpressionStmt(Expression& stmt) override;
+  void visitVarStmt(Var& stmt) override;
+  void visitBlockStmt(Block& stmt) override;
+  void visitIfStmt(If& stmt) override;
+  void visitFunctionStmt(Function& stmt) override;
+  // void visitReturnStmt(Return& stmt) override;
 };

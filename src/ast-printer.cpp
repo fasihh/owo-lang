@@ -16,6 +16,10 @@ std::string AstPrinter::print(Expr& expr) {
   return expr.accept(*this);
 }
 
+std::string AstPrinter::print(Stmt& stmt) {
+  return "<no_str_repr>";
+}
+
 void AstPrinter::visitBinaryExpr(Binary& expr) {
   const std::vector<Expr*> exprs{expr.left.get(), expr.right.get()};
   result_expr = parenthesize(expr.op->lexeme, exprs);
@@ -65,12 +69,12 @@ void AstPrinter::visitUnaryExpr(Unary& expr) {
   result_expr = parenthesize(expr.op->lexeme, exprs);
 }
 
-// void AstPrinter::visitCallExpr(Call& expr) {
-//   std::vector<Expr*> exprs{expr.callee.get()};
-//   for (auto& arg : expr.args)
-//     exprs.push_back(arg.get());
-//   result_expr = parenthesize("call", exprs);
-// }
+void AstPrinter::visitCallExpr(Call& expr) {
+  std::vector<Expr*> exprs{expr.callee.get()};
+  for (auto& arg : expr.args)
+    exprs.push_back(arg.get());
+  result_expr = parenthesize("call", exprs);
+}
 
 void AstPrinter::visitVariableExpr(Variable& expr) {
   result_expr = parenthesize(expr.label->lexeme, {});
@@ -79,4 +83,19 @@ void AstPrinter::visitVariableExpr(Variable& expr) {
 void AstPrinter::visitTernaryExpr(Ternary& expr) {
   const std::vector<Expr*> exprs{expr.condition.get(), expr.true_case.get(), expr.false_case.get()};
   result_expr = parenthesize("?:", exprs);
+}
+
+void AstPrinter::visitExpressionStmt(Expression &stmt) {
+}
+
+void AstPrinter::visitVarStmt(Var &stmt) {
+}
+
+void AstPrinter::visitBlockStmt(Block &stmt) {
+}
+
+void AstPrinter::visitIfStmt(If &stmt) {
+}
+
+void AstPrinter::visitFunctionStmt(Function &stmt) {
 }
