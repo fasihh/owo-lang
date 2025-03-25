@@ -8,6 +8,7 @@ struct Assign;
 struct Grouping;
 struct Literal;
 struct Unary;
+struct Call;
 struct Variable;
 struct Ternary;
 
@@ -17,6 +18,7 @@ struct ExprVisitorBase {
 	virtual void visitGroupingExpr(Grouping& expr) = 0;
 	virtual void visitLiteralExpr(Literal& expr) = 0;
 	virtual void visitUnaryExpr(Unary& expr) = 0;
+	virtual void visitCallExpr(Call& expr) = 0;
 	virtual void visitVariableExpr(Variable& expr) = 0;
 	virtual void visitTernaryExpr(Ternary& expr) = 0;
 };
@@ -84,6 +86,17 @@ struct Unary : Expr {
 		: op(op), right(std::move(right)) {};
 
 	void do_accept(ExprVisitorBase& visitor) { visitor.visitUnaryExpr(*this); }
+};
+
+struct Call : Expr {
+	const std::unique_ptr<Expr> callee;
+	const Token* paren;
+	const std::vector<std::unique_ptr<Expr>> args;
+
+	Call(std::unique_ptr<Expr> callee, const Token* paren, std::vector<std::unique_ptr<Expr>> args)
+		: callee(std::move(callee)), paren(paren), args(std::move(args)) {};
+
+	void do_accept(ExprVisitorBase& visitor) { visitor.visitCallExpr(*this); }
 };
 
 struct Variable : Expr {
