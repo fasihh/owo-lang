@@ -313,7 +313,7 @@ std::unique_ptr<Stmt> Parser::return_stmt() {
   std::unique_ptr<Expr> value = nullptr;
 
   if (!check(SEMICOLON))
-      value = expression();
+    value = expression();
 
   consume(SEMICOLON, "Expect ';' after 'return' value.");
   return std::make_unique<Return>(keyword, std::move(value));

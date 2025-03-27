@@ -2,7 +2,7 @@
 #include <stmt>
 #include <environment>
 
-class Interpreter : ExprVisitor<std::any>, StmtVisitor<nullptr_t> {
+class Interpreter : ExprVisitor, StmtVisitor<nullptr_t> {
 private:
   int mode;
   
@@ -23,14 +23,14 @@ public:
   void interpret(const std::vector<std::unique_ptr<Stmt>>& stmts);
   void set_mode(const int mode);
 
-  void visitBinaryExpr(Binary& expr) override;
-  void visitAssignExpr(Assign& expr) override;
-  void visitGroupingExpr(Grouping& expr) override;
-  void visitLiteralExpr(Literal& expr) override;
-  void visitUnaryExpr(Unary& expr) override;
-  void visitCallExpr(Call& expr) override;
-  void visitVariableExpr(Variable& expr) override;
-  void visitTernaryExpr(Ternary& expr) override;
+  std::any visitBinaryExpr(Binary& expr) override;
+  std::any visitAssignExpr(Assign& expr) override;
+  std::any visitGroupingExpr(Grouping& expr) override;
+  std::any visitLiteralExpr(Literal& expr) override;
+  std::any visitUnaryExpr(Unary& expr) override;
+  std::any visitCallExpr(Call& expr) override;
+  std::any visitVariableExpr(Variable& expr) override;
+  std::any visitTernaryExpr(Ternary& expr) override;
 
   void visitExpressionStmt(Expression& stmt) override;
   void visitVarStmt(Var& stmt) override;

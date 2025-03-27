@@ -1,0 +1,14 @@
+fun fib(n) {
+  if (n <= 1)
+    return n;
+  return fib(n - 2) + fib(n - 1);
+}
+
+fun counter(n, limit) {
+  if (n >= limit)
+    return;
+  print(fib(n));
+  counter(n + 1, limit);
+}
+
+counter(1, 10);

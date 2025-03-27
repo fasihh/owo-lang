@@ -92,9 +92,14 @@ void Interpreter::check_number_operands(const Token* token, const std::any& left
 
 void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& stmts, Environment* env) {
   Environment* previous = this->env;
-  this->env = env;
-  for (const auto& stmt : stmts)
-    execute(*stmt);
+  try {
+    this->env = env;
+    for (const auto& stmt : stmts)
+      execute(*stmt);
+  } catch (const ReturnException& ) {
+    this->env = previous;
+    throw;
+  }
   this->env = previous;
 }
 
@@ -118,126 +123,124 @@ Interpreter::~Interpreter() {
   delete env;
 }
 
-void Interpreter::visitBinaryExpr(Binary &expr) {
+std::any Interpreter::visitBinaryExpr(Binary &expr) {
   std::any left = evaluate(*expr.left);
   std::any right = evaluate(*expr.right);
+
+  // std::cout << *expr.op << std::endl;
+  // std::cout << left << " " << right << std::endl;
 
   switch (expr.op->type) {
   case TokenType::PLUS:
     if (is_string(left) && is_string(right)) {
-      result_expr = get_string(left) + get_string(right);
+      return get_string(left) + get_string(right);
     } else if (is_double(left) && is_double(right)) {
-      result_expr = get_double(left) + get_double(right);
+      return get_double(left) + get_double(right);
     } else if (is_string(left) && is_double(right)) {
-      result_expr = get_string(left) + double_to_string(get_double(right));
+      return get_string(left) + double_to_string(get_double(right));
     } else if (is_double(left) && is_string(right)) {
-      result_expr = double_to_string(get_double(left)) + get_string(right);
-    } else {
-      throw RuntimeError("Operands must be of type number and/or string", expr.op);
+      return double_to_string(get_double(left)) + get_string(right);
     }
-    return;
+    throw RuntimeError("Operands must be of type number and/or string", expr.op);
+  
   case TokenType::MINUS:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) - get_double(right);
-    return;
+    return get_double(left) - get_double(right);
+  
   case TokenType::STAR:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) * get_double(right);
-    return;
+    return get_double(left) * get_double(right);
+  
   case TokenType::SLASH:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) / get_double(right);
-    return;
+    return get_double(left) / get_double(right);
+  
   case TokenType::PERCENTAGE:
     check_number_operands(expr.op, left, right);
-    result_expr = static_cast<double>((int)get_double(left) % (int)get_double(right));
-    return;
+    return static_cast<double>((int)get_double(left) % (int)get_double(right));
+  
   case TokenType::GREATER:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) > get_double(right);
-    return;
+    return get_double(left) > get_double(right);
+  
   case TokenType::GREATER_EQUAL:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) >= get_double(right);
-    return;
+    return get_double(left) >= get_double(right);
+  
   case TokenType::LESS:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) < get_double(right);
-    return;
+    return get_double(left) < get_double(right);
+  
   case TokenType::LESS_EQUAL:
     check_number_operands(expr.op, left, right);
-    result_expr = get_double(left) <= get_double(right);
-    return;
+    return get_double(left) <= get_double(right);
+  
   case TokenType::EQUAL_EQUAL:
-    result_expr = is_equal(left, right);
-    return;
+    return is_equal(left, right);
+  
   case TokenType::BANG_EQUAL:
-    result_expr = !is_equal(left, right);
-    return;
+    return !is_equal(left, right);
+  
   case TokenType::AND:
     check_number_operands(expr.op, left, right);
-    result_expr = static_cast<double>((int)get_double(left) & (int)get_double(right));
-    return;
+    return static_cast<double>((int)get_double(left) & (int)get_double(right));
+  
   case TokenType::OR:
     check_number_operands(expr.op, left, right);
-    result_expr = static_cast<double>((int)get_double(left) | (int)get_double(right));
-    return;
+    return static_cast<double>((int)get_double(left) | (int)get_double(right));
+  
   case TokenType::XOR:
     check_number_operands(expr.op, left, right);
-    result_expr = static_cast<double>((int)get_double(left) ^ (int)get_double(right));
-    return;
+    return static_cast<double>((int)get_double(left) ^ (int)get_double(right));
+  
   case TokenType::LEFT_SHIFT:
     check_number_operands(expr.op, left, right);
-    result_expr = static_cast<double>((int)get_double(left) << (int)get_double(right));
-    return;
+    return static_cast<double>((int)get_double(left) << (int)get_double(right));
+  
   case TokenType::RIGHT_SHIFT:
     check_number_operands(expr.op, left, right);
-    result_expr = static_cast<double>((int)get_double(left) >> (int)get_double(right));
-    return;
+    return static_cast<double>((int)get_double(left) >> (int)get_double(right));
+  
   case TokenType::AND_AND:
-    result_expr = !is_truthy(left) ? false : is_truthy(right);
-    return;
+    return !is_truthy(left) ? false : is_truthy(right);
+  
   case TokenType::OR_OR:
-    result_expr = is_truthy(left) ? true : is_truthy(right);
-    return;
+    return is_truthy(left) ? true : is_truthy(right);
   }
 
-  result_expr = nullptr;
+  return nullptr;
 }
 
-void Interpreter::visitAssignExpr(Assign& expr) {
-  result_expr = env->assign(expr.name->lexeme, evaluate(*expr.value), expr.name);
+std::any Interpreter::visitAssignExpr(Assign& expr) {
+  return env->assign(expr.name->lexeme, evaluate(*expr.value), expr.name);
 }
 
-void Interpreter::visitGroupingExpr(Grouping &expr) {
-  result_expr = evaluate(*expr.expression);
+std::any Interpreter::visitGroupingExpr(Grouping &expr) {
+  return evaluate(*expr.expression);
 }
 
-void Interpreter::visitLiteralExpr(Literal &expr) {
-  result_expr = expr.value;
+std::any Interpreter::visitLiteralExpr(Literal &expr) {
+  return expr.value;
 }
 
-void Interpreter::visitUnaryExpr(Unary &expr) {
+std::any Interpreter::visitUnaryExpr(Unary &expr) {
   std::any right = evaluate(*expr.right);
 
   switch (expr.op->type) {
   case TokenType::MINUS:
     check_number_operand(expr.op, right);
-    result_expr = -get_double(right);
-    return;
+    return -get_double(right);
   case TokenType::BANG:
-    result_expr = !is_truthy(right);
-    return;
+    return !is_truthy(right);
   case TokenType::NOT:
     check_number_operand(expr.op, right);
-    result_expr = static_cast<double>(~(int)get_double(right));
-    return;
+    return static_cast<double>(~(int)get_double(right));
   }
 
-  result_expr = nullptr;
+  return nullptr;
 }
 
-void Interpreter::visitCallExpr(Call &expr) {
+std::any Interpreter::visitCallExpr(Call &expr) {
   std::any callee = evaluate(*expr.callee);
 
   std::vector<std::any> arguments;
@@ -248,27 +251,26 @@ void Interpreter::visitCallExpr(Call &expr) {
     Callable func = std::any_cast<Callable>(callee);
     if (arguments.size() != func.arity())
       throw RuntimeError("Expected " + std::to_string(func.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".", expr.paren);
-    result_expr = func.call(*this, arguments);
+    return func.call(*this, arguments);
 
   } else if (callee.type() == typeid(CallableFunction)) {
     CallableFunction func = std::any_cast<CallableFunction>(callee);
     if (arguments.size() != func.arity())
       throw RuntimeError("Expected " + std::to_string(func.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".", expr.paren);
-      result_expr = func.call(*this, arguments);
-      // std::cout << std::endl;//temp
+    return func.call(*this, arguments);
 
   } else {
     throw RuntimeError("Can only call functions and classes.", expr.paren);
   }
 }
 
-void Interpreter::visitVariableExpr(Variable &expr) {
-  result_expr = env->get(expr.label->lexeme, expr.label);
+std::any Interpreter::visitVariableExpr(Variable &expr) {
+  return env->get(expr.label->lexeme, expr.label);
 }
 
-void Interpreter::visitTernaryExpr(Ternary &expr) {
+std::any Interpreter::visitTernaryExpr(Ternary &expr) {
   std::any condition = evaluate(*expr.condition);
-  result_expr = evaluate(is_truthy(condition) ? *expr.true_case : *expr.false_case);
+  return evaluate(is_truthy(condition) ? *expr.true_case : *expr.false_case);
 }
 
 void Interpreter::visitExpressionStmt(Expression &stmt) {
@@ -303,5 +305,5 @@ void Interpreter::visitFunctionStmt(Function &stmt) {
 }
 
 void Interpreter::visitReturnStmt(Return &stmt) {
-  throw ReturnException(evaluate(*stmt.value));
+  throw ReturnException(stmt.value ? evaluate(*stmt.value) : nullptr);
 }

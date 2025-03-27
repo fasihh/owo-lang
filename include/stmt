@@ -18,14 +18,20 @@ struct StmtVisitorBase {
 
 template <typename T>
 struct StmtVisitor : StmtVisitorBase {
-	T result_stmt;
+	std::stack<T> result_stmt;
 };
 
 struct Stmt {
 	template <typename T>
 	T accept(StmtVisitor<T>& visitor) {
 		do_accept(visitor);
-		return visitor.result_stmt;
+
+		T result;
+		if (!visitor.result_stmt.empty()) {
+			result = visitor.result_stmt.top();
+			visitor.result_stmt.pop();
+		}
+		return result;
 	}
 
 	virtual void do_accept(StmtVisitorBase& visitor) = 0;

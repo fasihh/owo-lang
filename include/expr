@@ -1,6 +1,7 @@
 #pragma once
 #include <token>
 #include <vector>
+#include <stack>
 #include <memory>
 
 struct Binary;
@@ -12,61 +13,53 @@ struct Call;
 struct Variable;
 struct Ternary;
 
-struct ExprVisitorBase {
-	virtual void visitBinaryExpr(Binary& expr) = 0;
-	virtual void visitAssignExpr(Assign& expr) = 0;
-	virtual void visitGroupingExpr(Grouping& expr) = 0;
-	virtual void visitLiteralExpr(Literal& expr) = 0;
-	virtual void visitUnaryExpr(Unary& expr) = 0;
-	virtual void visitCallExpr(Call& expr) = 0;
-	virtual void visitVariableExpr(Variable& expr) = 0;
-	virtual void visitTernaryExpr(Ternary& expr) = 0;
-};
 
-template <typename T>
-struct ExprVisitor : ExprVisitorBase {
-	T result_expr;
+struct ExprVisitor {
+	virtual std::any visitBinaryExpr(Binary& expr) = 0;
+	virtual std::any visitAssignExpr(Assign& expr) = 0;
+	virtual std::any visitGroupingExpr(Grouping& expr) = 0;
+	virtual std::any visitLiteralExpr(Literal& expr) = 0;
+	virtual std::any visitUnaryExpr(Unary& expr) = 0;
+	virtual std::any visitCallExpr(Call& expr) = 0;
+	virtual std::any visitVariableExpr(Variable& expr) = 0;
+	virtual std::any visitTernaryExpr(Ternary& expr) = 0;
 };
 
 struct Expr {
-	template <typename T>
-	T accept(ExprVisitor<T>& visitor) {
-		do_accept(visitor);
-		return visitor.result_expr;
-	}
-
-	virtual void do_accept(ExprVisitorBase& visitor) = 0;
+	virtual std::any accept(ExprVisitor& visitor) = 0;
 	virtual ~Expr() = default;
 };
 
-struct Binary : Expr {
-	const std::unique_ptr<Expr> left;
-	const Token* op;
-	const std::unique_ptr<Expr> right;
+typedef std::unique_ptr<Expr> ExprPtr;
 
-	Binary(std::unique_ptr<Expr> left, const Token* op, std::unique_ptr<Expr> right)
+struct Binary : Expr {
+	const ExprPtr left;
+	const Token* op;
+	const ExprPtr right;
+
+	Binary(ExprPtr left, const Token* op, ExprPtr right)
 		: left(std::move(left)), op(op), right(std::move(right)) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitBinaryExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitBinaryExpr(*this); }
 };
 
 struct Assign : Expr {
 	const Token* name;
-	const std::unique_ptr<Expr> value;
+	const ExprPtr value;
 
-	Assign(const Token* name, std::unique_ptr<Expr> value)
+	Assign(const Token* name, ExprPtr value)
 		: name(name), value(std::move(value)) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitAssignExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitAssignExpr(*this); }
 };
 
 struct Grouping : Expr {
-	const std::unique_ptr<Expr> expression;
+	const ExprPtr expression;
 
-	Grouping(std::unique_ptr<Expr> expression)
+	Grouping(ExprPtr expression)
 		: expression(std::move(expression)) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitGroupingExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitGroupingExpr(*this); }
 };
 
 struct Literal : Expr {
@@ -75,28 +68,28 @@ struct Literal : Expr {
 	Literal(std::any value)
 		: value(value) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitLiteralExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitLiteralExpr(*this); }
 };
 
 struct Unary : Expr {
 	const Token* op;
-	const std::unique_ptr<Expr> right;
+	const ExprPtr right;
 
-	Unary(const Token* op, std::unique_ptr<Expr> right)
+	Unary(const Token* op, ExprPtr right)
 		: op(op), right(std::move(right)) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitUnaryExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitUnaryExpr(*this); }
 };
 
 struct Call : Expr {
-	const std::unique_ptr<Expr> callee;
+	const ExprPtr callee;
 	const Token* paren;
-	const std::vector<std::unique_ptr<Expr>> args;
+	const std::vector<ExprPtr> args;
 
-	Call(std::unique_ptr<Expr> callee, const Token* paren, std::vector<std::unique_ptr<Expr>> args)
+	Call(ExprPtr callee, const Token* paren, std::vector<ExprPtr> args)
 		: callee(std::move(callee)), paren(paren), args(std::move(args)) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitCallExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitCallExpr(*this); }
 };
 
 struct Variable : Expr {
@@ -105,17 +98,17 @@ struct Variable : Expr {
 	Variable(const Token* label)
 		: label(label) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitVariableExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitVariableExpr(*this); }
 };
 
 struct Ternary : Expr {
-	const std::unique_ptr<Expr> condition;
-	const std::unique_ptr<Expr> true_case;
-	const std::unique_ptr<Expr> false_case;
+	const ExprPtr condition;
+	const ExprPtr true_case;
+	const ExprPtr false_case;
 
-	Ternary(std::unique_ptr<Expr> condition, std::unique_ptr<Expr> true_case, std::unique_ptr<Expr> false_case)
+	Ternary(ExprPtr condition, ExprPtr true_case, ExprPtr false_case)
 		: condition(std::move(condition)), true_case(std::move(true_case)), false_case(std::move(false_case)) {};
 
-	void do_accept(ExprVisitorBase& visitor) { visitor.visitTernaryExpr(*this); }
+	std::any accept(ExprVisitor& visitor) { return visitor.visitTernaryExpr(*this); }
 };
 

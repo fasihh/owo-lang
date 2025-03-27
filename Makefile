@@ -24,7 +24,7 @@ run: $(BIN_DIR)/$(TARGET)
 	./bin/main
 
 runf: $(BIN_DIR)/$(TARGET)
-	./bin/main owo.kt
+	./bin/main owo
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
